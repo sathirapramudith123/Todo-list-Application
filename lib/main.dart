@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 void main() {
   runApp(const TodoApp());
@@ -18,17 +19,17 @@ class TodoApp extends StatelessWidget {
         ),
         useMaterial3: true,
         appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
-        inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
-        ),
       ),
       home: const TodoListScreen(),
     );
   }
+}
+
+class Todo {
+  String title;
+  DateTime? dateTime;
+
+  Todo({required this.title, this.dateTime});
 }
 
 class TodoListScreen extends StatefulWidget {
@@ -39,16 +40,21 @@ class TodoListScreen extends StatefulWidget {
 }
 
 class _TodoListScreenState extends State<TodoListScreen> {
-  final List<String> _todos = [];
+  final List<Todo> _todos = [];
   final TextEditingController _todoController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   final TextEditingController _editTodoController = TextEditingController();
+  DateTime? _selectedDateTime;
   int? _editingIndex;
 
   void _addTodo() {
     if (_todoController.text.trim().isNotEmpty) {
       setState(() {
-        _todos.add(_todoController.text.trim());
+        _todos.add(
+          Todo(title: _todoController.text.trim(), dateTime: _selectedDateTime),
+        );
         _todoController.clear();
+        _selectedDateTime = null;
       });
       _showSnackBar('Task added successfully!', Colors.green);
     } else {
@@ -58,15 +64,20 @@ class _TodoListScreenState extends State<TodoListScreen> {
 
   void _startEditing(int index) {
     _editingIndex = index;
-    _editTodoController.text = _todos[index];
+    _editTodoController.text = _todos[index].title;
+    _selectedDateTime = _todos[index].dateTime;
     _showEditDialog();
   }
 
   void _updateTodo() {
     if (_editTodoController.text.trim().isNotEmpty) {
       setState(() {
-        _todos[_editingIndex!] = _editTodoController.text.trim();
+        _todos[_editingIndex!] = Todo(
+          title: _editTodoController.text.trim(),
+          dateTime: _selectedDateTime,
+        );
         _editTodoController.clear();
+        _selectedDateTime = null;
         _editingIndex = null;
       });
       _showSnackBar('Task updated successfully!', Colors.blue);
@@ -103,6 +114,37 @@ class _TodoListScreenState extends State<TodoListScreen> {
     );
   }
 
+  void _pickDateTime() async {
+    DateTime? date = await showDatePicker(
+      context: context,
+      initialDate: _selectedDateTime ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+
+    if (date != null) {
+      TimeOfDay? time = await showTimePicker(
+        context: context,
+        initialTime:
+            _selectedDateTime != null
+                ? TimeOfDay.fromDateTime(_selectedDateTime!)
+                : TimeOfDay.now(),
+      );
+
+      if (time != null) {
+        setState(() {
+          _selectedDateTime = DateTime(
+            date.year,
+            date.month,
+            date.day,
+            time.hour,
+            time.minute,
+          );
+        });
+      }
+    }
+  }
+
   void _showEditDialog() {
     showDialog(
       context: context,
@@ -123,12 +165,20 @@ class _TodoListScreenState extends State<TodoListScreen> {
                 const SizedBox(height: 16),
                 TextField(
                   controller: _editTodoController,
-                  decoration: const InputDecoration(
-                    hintText: 'Edit your task',
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(hintText: 'Edit your task'),
                   autofocus: true,
                 ),
+                const SizedBox(height: 8),
+                TextButton.icon(
+                  icon: const Icon(Icons.calendar_today),
+                  label: const Text('Pick Date & Time'),
+                  onPressed: _pickDateTime,
+                ),
+                const SizedBox(height: 8),
+                if (_selectedDateTime != null)
+                  Text(
+                    'Selected: ${DateFormat('yyyy-MM-dd – hh:mm a').format(_selectedDateTime!)}',
+                  ),
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -140,7 +190,6 @@ class _TodoListScreenState extends State<TodoListScreen> {
                       },
                       child: const Text('Cancel'),
                     ),
-                    const SizedBox(width: 8),
                     ElevatedButton(
                       onPressed: () {
                         Navigator.of(context).pop();
@@ -161,18 +210,17 @@ class _TodoListScreenState extends State<TodoListScreen> {
   void _showAlertDialog(String title, String message) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
+      builder:
+          (BuildContext context) => AlertDialog(
+            title: Text(title),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
     );
   }
 
@@ -180,16 +228,25 @@ class _TodoListScreenState extends State<TodoListScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        duration: const Duration(seconds: 2),
         backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final filteredTodos =
+        _searchController.text.isEmpty
+            ? _todos
+            : _todos
+                .where(
+                  (todo) => todo.title.toLowerCase().contains(
+                    _searchController.text.toLowerCase(),
+                  ),
+                )
+                .toList();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Todo List'),
@@ -200,33 +257,30 @@ class _TodoListScreenState extends State<TodoListScreen> {
               onPressed: () {
                 showDialog(
                   context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text('Clear All Tasks'),
-                      content: const Text(
-                        'Are you sure you want to delete all tasks?',
+                  builder:
+                      (context) => AlertDialog(
+                        title: const Text('Clear All Tasks'),
+                        content: const Text(
+                          'Are you sure you want to delete all tasks?',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              setState(() => _todos.clear());
+                              Navigator.pop(context);
+                              _showSnackBar(
+                                'All tasks cleared!',
+                                Colors.deepOrange,
+                              );
+                            },
+                            child: const Text('Clear All'),
+                          ),
+                        ],
                       ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              _todos.clear();
-                            });
-                            Navigator.of(context).pop();
-                            _showSnackBar(
-                              'All tasks cleared!',
-                              Colors.deepOrange,
-                            );
-                          },
-                          child: const Text('Clear All'),
-                        ),
-                      ],
-                    );
-                  },
                 );
               },
             ),
@@ -235,84 +289,62 @@ class _TodoListScreenState extends State<TodoListScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            padding: const EdgeInsets.all(12),
+            child: TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(
+                hintText: 'Search tasks...',
+                prefixIcon: Icon(Icons.search),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _todoController,
-                        decoration: const InputDecoration(
-                          hintText: 'What needs to be done?',
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                        ),
-                        onSubmitted: (_) => _addTodo(),
-                      ),
+              onChanged: (_) => setState(() {}),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _todoController,
+                    decoration: const InputDecoration(
+                      hintText: 'What needs to be done?',
                     ),
-                    const SizedBox(width: 8),
-                    FloatingActionButton.small(
-                      onPressed: _addTodo,
-                      child: const Icon(Icons.add),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                IconButton(
+                  icon: const Icon(Icons.calendar_today),
+                  onPressed: _pickDateTime,
+                ),
+                FloatingActionButton.small(
+                  onPressed: _addTodo,
+                  child: const Icon(Icons.add),
+                ),
+              ],
             ),
           ),
           Expanded(
             child:
-                _todos.isEmpty
-                    ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.assignment_outlined,
-                            size: 64,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primary.withOpacity(0.3),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No tasks yet',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withOpacity(0.5),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Add your first task above',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withOpacity(0.4),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
+                filteredTodos.isEmpty
+                    ? const Center(child: Text('No tasks found.'))
                     : ListView.builder(
-                      itemCount: _todos.length,
+                      itemCount: filteredTodos.length,
                       itemBuilder: (context, index) {
+                        final todo = filteredTodos[index];
                         return Card(
                           margin: const EdgeInsets.symmetric(
                             horizontal: 16,
-                            vertical: 4,
+                            vertical: 6,
                           ),
                           child: ListTile(
-                            title: Text(_todos[index]),
+                            title: Text(todo.title),
+                            subtitle:
+                                todo.dateTime != null
+                                    ? Text(
+                                      DateFormat(
+                                        'yyyy-MM-dd – hh:mm a',
+                                      ).format(todo.dateTime!),
+                                    )
+                                    : null,
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -343,6 +375,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
   void dispose() {
     _todoController.dispose();
     _editTodoController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 }
