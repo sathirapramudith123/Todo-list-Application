@@ -11,47 +11,96 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<Task> tasks = [];
+  String searchText = '';
 
   @override
   Widget build(BuildContext context) {
+    final filteredTasks =
+        tasks
+            .where(
+              (t) => t.title.toLowerCase().contains(searchText.toLowerCase()),
+            )
+            .toList();
+
     return Scaffold(
-      appBar: AppBar(title: Text("To-Do List")),
+      backgroundColor: Color(0xFFF5F5F5),
+      appBar: AppBar(
+        title: Text(
+          "To-Do List",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.indigoAccent,
+        elevation: 0,
+        centerTitle: true,
+      ),
       body: Column(
         children: [
-          Padding(
-            padding: EdgeInsets.all(8.0),
+          Container(
+            margin: EdgeInsets.all(12),
+            padding: EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6)],
+            ),
             child: TextField(
-              decoration: InputDecoration(hintText: 'Search Tasks'),
-              onChanged: (val) {
-                setState(() {
-                  // Search logic can be added here
-                });
-              },
+              decoration: InputDecoration(
+                hintText: 'Search Tasks',
+                border: InputBorder.none,
+                icon: Icon(Icons.search, color: Colors.grey),
+              ),
+              onChanged: (val) => setState(() => searchText = val),
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: tasks.length,
-              itemBuilder: (ctx, index) {
-                return TaskCard(
-                  task: tasks[index],
-                  onEdit: () async {
-                    final updated = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => UpdateTaskPage(task: tasks[index]),
+            child:
+                filteredTasks.isEmpty
+                    ? Center(
+                      child: Text(
+                        'No tasks found',
+                        style: TextStyle(color: Colors.grey, fontSize: 16),
                       ),
-                    );
-                    if (updated != null) setState(() => tasks[index] = updated);
-                  },
-                  onDelete: () => setState(() => tasks.removeAt(index)),
-                );
-              },
-            ),
+                    )
+                    : ListView.builder(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      itemCount: filteredTasks.length,
+                      itemBuilder: (ctx, index) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: TaskCard(
+                            task: filteredTasks[index],
+                            onEdit: () async {
+                              final updated = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => UpdateTaskPage(
+                                        task: filteredTasks[index],
+                                      ),
+                                ),
+                              );
+                              if (updated != null) {
+                                setState(() {
+                                  final taskIndex = tasks.indexOf(
+                                    filteredTasks[index],
+                                  );
+                                  tasks[taskIndex] = updated;
+                                });
+                              }
+                            },
+                            onDelete: () {
+                              setState(() {
+                                tasks.remove(filteredTasks[index]);
+                              });
+                            },
+                          ),
+                        );
+                      },
+                    ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           final task = await Navigator.push(
             context,
@@ -59,8 +108,9 @@ class _HomePageState extends State<HomePage> {
           );
           if (task != null) setState(() => tasks.add(task));
         },
-        child: Icon(Icons.add),
-        tooltip: 'Add New Task',
+        label: Text("Add Task"),
+        icon: Icon(Icons.add),
+        backgroundColor: Colors.indigoAccent,
       ),
     );
   }

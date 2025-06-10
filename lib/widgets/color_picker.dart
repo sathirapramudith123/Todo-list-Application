@@ -8,7 +8,7 @@ class ColorPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = [Colors.yellow, Colors.green, Colors.lightBlue];
+    final colors = [Colors.red, Colors.green, Colors.lightBlue];
     return Row(
       children:
           colors.map((color) {
