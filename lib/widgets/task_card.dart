@@ -14,22 +14,46 @@ class TaskCard extends StatelessWidget {
     return Card(
       color: task.color,
       margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: ListTile(
-        title: Text(task.title, style: whiteText),
-        subtitle: Text(
-          '${task.startTime.format(context)} - ${task.endTime.format(context)}',
-          style: whiteText,
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            IconButton(
-              onPressed: onEdit,
-              icon: Icon(Icons.edit, color: Colors.white),
+            // Title
+            Text(
+              task.title,
+              style: whiteText.copyWith(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            IconButton(
-              onPressed: onDelete,
-              icon: Icon(Icons.delete, color: Colors.white),
+            SizedBox(height: 4),
+
+            // Time range
+            Text(
+              '${task.startTime.format(context)} - ${task.endTime.format(context)}',
+              style: whiteText,
+            ),
+
+            // Description / Note
+            if (task.note.isNotEmpty) ...[
+              SizedBox(height: 8),
+              Text(task.note, style: whiteText.copyWith(fontSize: 14)),
+            ],
+
+            // Action buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  onPressed: onEdit,
+                  icon: Icon(Icons.edit, color: Colors.white),
+                ),
+                IconButton(
+                  onPressed: onDelete,
+                  icon: Icon(Icons.delete, color: Colors.white),
+                ),
+              ],
             ),
           ],
         ),

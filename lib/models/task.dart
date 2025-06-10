@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 class Task {
-  String title;
-  String note;
-  DateTime date;
-  TimeOfDay startTime;
-  TimeOfDay endTime;
-  Color color;
+  final String title;
+  final String note;
+  final DateTime date;
+  final TimeOfDay startTime;
+  final TimeOfDay endTime;
+  final Color color;
 
   Task({
     required this.title,
