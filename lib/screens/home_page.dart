@@ -24,20 +24,10 @@ class _HomePageState extends State<HomePage> {
               decoration: InputDecoration(hintText: 'Search Tasks'),
               onChanged: (val) {
                 setState(() {
-                  // Add search logic here if needed
+                  // Search logic can be added here
                 });
               },
             ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final task = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => AddTaskPage()),
-              );
-              if (task != null) setState(() => tasks.add(task));
-            },
-            child: Text("Add New Task"),
           ),
           Expanded(
             child: ListView.builder(
@@ -60,6 +50,17 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final task = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => AddTaskPage()),
+          );
+          if (task != null) setState(() => tasks.add(task));
+        },
+        child: Icon(Icons.add),
+        tooltip: 'Add New Task',
       ),
     );
   }
