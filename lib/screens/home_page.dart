@@ -27,7 +27,11 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Text(
           "To-Do List",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: 24,
+          ),
         ),
         backgroundColor: Colors.indigoAccent,
         elevation: 0,
@@ -108,8 +112,8 @@ class _HomePageState extends State<HomePage> {
           );
           if (task != null) setState(() => tasks.add(task));
         },
-        label: Text("Add Task"),
-        icon: Icon(Icons.add),
+        label: Text("Add Task", style: TextStyle(color: Colors.white)),
+        icon: Icon(Icons.add, color: Colors.white),
         backgroundColor: Colors.indigoAccent,
       ),
     );

@@ -40,7 +40,7 @@ class _UpdateTaskPageState extends State<UpdateTaskPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Update Task"),
+        title: Text("Update Task", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.indigoAccent,
         elevation: 0,
       ),
@@ -171,8 +171,8 @@ class _UpdateTaskPageState extends State<UpdateTaskPage> {
                 );
                 Navigator.pop(context, updatedTask);
               },
-              icon: Icon(Icons.save),
-              label: Text("Update Task"),
+              icon: Icon(Icons.save, color: Colors.white),
+              label: Text("Update Task", style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                 backgroundColor: Colors.indigoAccent,

@@ -25,7 +25,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Add New Task"),
+        title: Text("Add New Task", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.indigoAccent,
         elevation: 0,
       ),
@@ -156,8 +156,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 );
                 Navigator.pop(context, newTask);
               },
-              icon: Icon(Icons.save),
-              label: Text("Save Task"),
+              icon: Icon(Icons.save, color: Colors.white),
+              label: Text("Save Task", style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                 backgroundColor: Colors.indigoAccent,
